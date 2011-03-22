@@ -26,10 +26,12 @@ parseInterrupts = do
 
 parseInterruptLine :: Parser Counter
 parseInterruptLine = do
-  spaces
+  realspaces
   name <- manyTill anyChar (char ':')
-  spaces
+  realspaces
   count <- many digit
-  spaces
+  realspaces
   trash <- manyTill anyChar newline
   return $ Counter name (read count) trash
+
+realspaces = many (oneOf " \t")
