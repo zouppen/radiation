@@ -2,17 +2,17 @@ module Iri where
 
 import GpioAccess
 import InterruptsParser (interruptCount)
+import Records (Device, powerPin, pulseInt)
 
-powerOn :: IO ()
-powerOn = writeGpioValue "5" "1"
+powerOn :: Device -> IO ()
+powerOn x = writeGpioValue (powerPin x) "1"
 
-powerOff :: IO ()
-powerOff = writeGpioValue "5" "0"
+powerOff :: Device -> IO ()
+powerOff x = writeGpioValue (powerPin x) "0"
 
-getPulseCount :: IO Integer
-getPulseCount = do
-  maybeCount <- interruptCount "34"
+getPulseCount :: Device -> IO Integer
+getPulseCount x = do
+  maybeCount <- interruptCount (pulseInt x)
   case maybeCount of
     Just a -> return a
-    Nothing -> fail "Interrupt 34 is not registered"
-
+    Nothing -> fail $ "Interrupt " ++ (pulseInt x) ++ " is not registered"

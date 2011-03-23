@@ -1,24 +1,49 @@
 module Main where
 
-import Data.Time.Clock
 import System.Posix.Unistd (sleep)
 import Iri
+import Records --(Device,powerPin,pulseInt)
 
--- |Measures radiation for given number of seconds. Returns pulses per
--- million seconds.
-measure :: Int -> IO (NominalDiffTime, Integer)
-measure len = do
-  powerOn
+-- NB. I hate time handling in Haskell. It's quite sophisticated but
+-- totally useless in real world. Q: How many Haskell modules do you
+-- need to get a UNIX timestamp? A: Three and you still get it as
+-- String and you need to provide your own light bulb, too.
+import Data.Time.Format (formatTime)
+import System.Locale (defaultTimeLocale)
+import Data.Time.Clock
+
+data Measurement = Measurement { timestamp :: UTCTime
+                               , duration  :: NominalDiffTime
+                               , pulses    :: Integer
+                               , ucps      :: Integer
+                               }
+
+-- |Measures radiation for given number of seconds.
+measure :: Device -> Int -> IO Measurement
+measure dev len = do
+  powerOn dev
   sleep 2 -- Wait for meter to climb up.
-  beforePulses <- getPulseCount
+  beforePulses <- getPulseCount dev
   beforeTime <- getCurrentTime
   sleep len
-  afterPulses <- getPulseCount
+  afterPulses <- getPulseCount dev
   afterTime <- getCurrentTime
-  powerOff
-  return $ (diffUTCTime afterTime beforeTime,afterPulses-beforePulses)
+  powerOff dev
+  
+  let duration = diffUTCTime afterTime beforeTime
+  let pulses = afterPulses-beforePulses
+  
+  return $ Measurement beforeTime duration pulses (toUcps pulses duration)
 
+-- |Converts pulse count and duration to micropulses per second (µc/s)
+toUcps pulses dur = round $ 1e6 * (fromInteger $ pulses) / dur
+
+toUnixTimeString :: UTCTime -> String
+toUnixTimeString x = formatTime defaultTimeLocale "%s" x
+
+-- ^Main function which returns pulses per million seconds (µc/s)
 main = do
-  (dur,n) <- measure 30
-  let c_per_Ms = round $ 1e6 * (fromInteger n) / dur
-  putStrLn $ show c_per_Ms
+  res <- measure dev 30
+  putStrLn $ (toUnixTimeString $ timestamp res)++","++(show $ ucps res)
+  
+  where dev = Device {powerPin = "5", pulseInt = "34" }

@@ -1,0 +1,28 @@
+Linux support for IRI-1 gamma counter
+=====================================
+
+This userspace tool is very dependant on TS-7800 hardware at the
+moment. And this depends on IRI-1 gamma counter which was produced in
+Estonia during Soviet occupation. :-D
+
+If you happen to have one, change parameters in MeasureRadiation.hs and go!
+
+
+Compiling
+---------
+
+ghc --make MeasureRadiation.hs
+
+
+Running
+-------
+
+$ ./MeasureRadiation
+
+The format used is comma-separated values of UNIX timestamp and intensity.
+
+The unit of intensity is µc/s (micropulses per second). That's totally
+uncalibrated unit depending on the meter you are using. You can get it to
+Sv/h by doing some magical calibration, calculation, and stuff.
+
+When the radiation levels get too high, take your iodate pills and have fun.
