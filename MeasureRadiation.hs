@@ -4,8 +4,8 @@ import Data.Time.Clock
 import System.Posix.Unistd (sleep)
 import Iri
 
--- |Measures radiation for given number of seconds. Returns duration
--- and pulse count.
+-- |Measures radiation for given number of seconds. Returns pulses per
+-- million seconds.
 measure :: Int -> IO (NominalDiffTime, Integer)
 measure len = do
   powerOn
@@ -19,5 +19,6 @@ measure len = do
   return $ (diffUTCTime afterTime beforeTime,afterPulses-beforePulses)
 
 main = do
-  ret <- measure 15
-  putStrLn $ show ret
+  (dur,n) <- measure 30
+  let c_per_Ms = round $ 1e6 * (fromInteger n) / dur
+  putStrLn $ show c_per_Ms
